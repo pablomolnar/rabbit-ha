@@ -1,0 +1,27 @@
+<plugin name='rabbit-ha' version='0.1' grailsVersion='1.3.7 &gt; *'>
+  <author>Pablo Molnar</author>
+  <authorEmail>pablomolnar@gmail.com</authorEmail>
+  <title>RabbitMQ-HA Plugin</title>
+  <description>Alternative RabbitMQ plugin for Grails.
+</description>
+  <documentation>http://grails.org/plugin/rabbit-ha</documentation>
+  <type>RabbitHaGrailsPlugin</type>
+  <resources>
+    <resource>rabbit.ha.PabloConsumer</resource>
+  </resources>
+  <repositories>
+    <repository name='grailsCentral' url='http://plugins.grails.org' />
+    <repository name='http://repo.grails.org/grails/plugins' url='http://repo.grails.org/grails/plugins/' />
+    <repository name='http://repo.grails.org/grails/core' url='http://repo.grails.org/grails/core/' />
+    <repository name='grailsCore' url='http://svn.codehaus.org/grails/trunk/grails-plugins' />
+    <repository name='mavenCentral' url='http://repo1.maven.org/maven2/' />
+  </repositories>
+  <dependencies>
+    <runtime>
+      <dependency group='com.rabbitmq' name='amqp-client' version='2.8.2' />
+    </runtime>
+  </dependencies>
+  <plugins />
+  <runtimePluginRequirements />
+  <behavior />
+</plugin>

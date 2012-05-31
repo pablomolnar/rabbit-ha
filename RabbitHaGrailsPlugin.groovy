@@ -22,11 +22,13 @@ class RabbitHaGrailsPlugin {
     ]
 
     // TODO Fill in these fields
-    def title = "RabbitMQ-HA Plugin" // Headline display name of the plugin
+    def title = "RabbitMQ-HA Grails Plugin" // Headline display name of the plugin
     def author = "Pablo Molnar"
     def authorEmail = "pablomolnar@gmail.com"
     def description = '''\
 Alternative RabbitMQ plugin for Grails.
+
+Full documentation can be found here: http://grails.org/plugin/rabbit-ha
 '''
 
     // URL to the plugin's documentation
@@ -35,7 +37,7 @@ Alternative RabbitMQ plugin for Grails.
     // Extra (optional) plugin metadata
 
     // License: one of 'APACHE', 'GPL2', 'GPL3'
-    def license = "APACHE"
+    def license = "MIT"
 
     // Details of company behind the plugin (if there is one)
 //    def organization = [ name: "My Company", url: "http://www.my-company.com/" ]
