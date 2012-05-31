@@ -12,7 +12,7 @@ This is an alternative to grails-rabbitmq official plugin. The main difference i
 You should add the connection settings in Config.groovy
 
 e.g.:
-`
+
     rabbitmq {
         connectionfactory {
             username = "guest"
@@ -22,7 +22,7 @@ e.g.:
 
         }
     }
-`
+
 
 Then create a new consumer use the new command `create-consumer`.
 
@@ -31,18 +31,17 @@ e.g.
 
 The result will be a class like
 
-`
-class MyBrandNewConsumer extends RabbitHAConsumer {
-    static final Logger log = Logger.getLogger(this)
 
-    String queueName = 'items_external_feed'
-    int concurrency = 5
+    class MyBrandNewConsumer extends RabbitHAConsumer {
+        static final Logger log = Logger.getLogger(this)
 
-    void onDelivery(QueueingConsumer.Delivery delivery) {
-        // process delivery
+        String queueName = 'items_external_feed'
+        int concurrency = 5
+
+        void onDelivery(QueueingConsumer.Delivery delivery) {
+    	// process delivery
+        }
     }
-}
-`
 
 Every consumers owns an exclusive connection and every worker has a private channel
 
