@@ -1,14 +1,16 @@
-@artifact.package@
+package rabbit.ha
+
+
 
 import com.rabbitmq.client.QueueingConsumer
 import grails.plugin.rabbitha.RabbitHAConsumer
 import org.apache.log4j.Logger
 
-class @artifact.name@ extends RabbitHAConsumer {
+class PabloConsumer extends RabbitHAConsumer {
     static final Logger log = Logger.getLogger(this)
 
-    String queueName = 'queue_name_to_consume'
-    int concurrency = 1
+    String queueName = 'items_external_feed'
+    int concurrency = 5
 
     void onDelivery(QueueingConsumer.Delivery delivery) {
         // process delivery

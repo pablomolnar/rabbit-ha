@@ -16,7 +16,7 @@ import com.rabbitmq.client.Connection
  * Implementation of a basic parallel enabled consumer with reconnection logic on errors.
  *
  */
-class RabbitHAConsumerWorker implements Callable {
+class RabbitHAConsumerWorker implements Runnable {
     static final Logger log = Logger.getLogger(this)
 
     volatile boolean running = true
@@ -30,7 +30,7 @@ class RabbitHAConsumerWorker implements Callable {
     Channel channel
     def consumer
 
-    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer) {
+    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, int prefetchCount = 100) {
         this.rabbitHAConsumer = rabbitHAConsumer
         this.queueName = rabbitHAConsumer.queueName
     }
@@ -47,8 +47,8 @@ class RabbitHAConsumerWorker implements Callable {
         channel.basicQos(10)
     }
 
-    def call() {
-        log.info("Worker started: " + Thread.currentThread())
+    void run() {
+        log.info "Worker started"
 
         while (running) {
             try {
@@ -73,16 +73,17 @@ class RabbitHAConsumerWorker implements Callable {
 
             } catch (e) {
                 if (running == false) {
-                    log.info "Exception was thrown while consumer was closing: ${e.class}"
+                    log.debug "Exception was thrown while consumer was closing: ${e.class}"
                     return
                 }
 
                 // Only handled exceptions
                 if (!(e instanceof ConnectException || e instanceof ShutdownSignalException || e instanceof IOException || e instanceof AlreadyClosedException)) {
+                    log.error("Don't reconnect with this exception....", e)
                     throw new RuntimeException("Don't reconnect with this exception....", e)
                 }
 
-                if (i > 20) throw new RuntimeException("Reconnection failed $i times. Abort mission", e)
+                if (i > 10) throw new RuntimeException("Reconnection failed $i times. Abort mission", e)
 
                 i++
                 reconnect = true

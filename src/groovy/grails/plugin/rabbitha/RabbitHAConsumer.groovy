@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import javax.annotation.PreDestroy
+import java.util.concurrent.TimeUnit
 
 /**
  * @author: Pablo Molnar
@@ -19,38 +20,42 @@ abstract class RabbitHAConsumer {
     List<RabbitHAConsumerWorker> consumers = []
 
     int getConcurrency() { 1 }
+    int getPrefetchCount() { 100 }
+
     abstract void onDelivery(QueueingConsumer.Delivery delivery)
     abstract String getQueueName()
 
-    @PostConstruct
     def start() {
-        println "Starting $concurrency consumers for $queueName"
         log.info "Starting $concurrency consumers for $queueName"
         service = Executors.newFixedThreadPool(concurrency)
         concurrency.times {
-            def consumer = new RabbitHAConsumerWorker(this)
+            def consumer = new RabbitHAConsumerWorker(this, prefetchCount)
             consumers << consumer
-            service.submit(consumer)
+            service.execute(consumer)
         }
     }
 
     @PreDestroy
     def destroy() {
-        log.info "Shutdown consumers"
+        log.info "Shutdown consumer of $queueName"
+        // TODO: Refactor close & release resources...
+        consumers.each {
+            it.running = false
+        }
+
         consumers.each {
             it.close()
         }
 
         // Shutdown pool and wait threads are released
-        service.shutdown
-        sleep(10)
-
-        if(!service.isTerminated()) {
-            log.info "Consumers of queue $queueName are still alive. Force shutdown..."
+        service.shutdown()
+        if(!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+            log.warn "Consumer workers of queue $queueName are still alive. Force shutdown..."
             service.shutdownNow()
-            sleep(10)
 
-            log.info "Check consumers are terminated: " + service.isTerminated()
+            if(!service.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+                log.error "WTF! Some tasks still alive :S"
+            }
         }
     }
 }
