@@ -51,6 +51,27 @@ Full documentation can be found here: http://grails.org/plugin/rabbit-ha
     // Online location of the plugin's browseable source code.
     def scm = [url: "https://github.com/pablomolnar/rabbit-ha"]
 
+
+
+
+    def missingConfigurationError = """RabbitMQ connection factory settings (rabbitmq.connectionfactory.username, rabbitmq.connectionfactory.password and rabbitmq.connectionfactory.virtualHost and rabbitmq.connectionfactory.addresses) must be defined in Config.groovy
+e.g.:
+
+rabbitmq {
+    connectionfactory {
+        username = "guest"
+        password = "guest"
+        virtualHost = "/"
+        addresses = ['hostname_1','hostname_2', ...]
+    }
+}
+
+RabbitMQ consumers configuration will be ignored...
+If you want to disable the plugin and remove this warning set rabbitmq.disabled = true
+"""
+    )
+
+
     def watchedResources = [
             "file:./grails-app/consumers/**/*Consumer.groovy",
             "file:./plugins/*/grails-app/consumers/**/*Consumer.groovy"
@@ -63,28 +84,14 @@ Full documentation can be found here: http://grails.org/plugin/rabbit-ha
     }
 
     def doWithSpring = {
-        def cfg = application.config.rabbitmq?.connectionfactory
-        if (!cfg || !cfg.username || !cfg.password || !cfg.virtualHost || !cfg.addresses) {
-            log.error(
-
-                    """
-RabbitMQ connection factory settings (rabbitmq.connectionfactory.username, rabbitmq.connectionfactory.password and rabbitmq.connectionfactory.virtualHost and rabbitmq.connectionfactory.addresses) must be defined in Config.groovy
-
-e.g.:
-    rabbitmq {
-        connectionfactory {
-            username = "guest"
-            password = "guest"
-            virtualHost = "/"
-            addresses = ['hostname_1','hostname_2', ...]
-
+        def rabbitmq = application.config.rabbitmq
+        if(rabbitmq && rabbitmq.disabled) {
+            log.info "Plugin rabbit-ha is disabled"
+            return
         }
-    }
 
-RabbitMQ consumers configuration will be ignored...
-"""
-            )
-
+        if(!rabbitmq || !rabbitmq.connectionfactory || !rabbitmq.connectionfactory.username || !rabbitmq.connectionfactory.password || !rabbitmq.connectionfactory.virtualHost || !rabbitmq.connectionfactory.addresses) {
+            log.error(missingConfigurationError)
             return
         }
 
@@ -100,13 +107,19 @@ RabbitMQ consumers configuration will be ignored...
     }
 
     def doWithApplicationContext = { applicationContext ->
+        def rabbitmq = application.config.rabbitmq
 
         // Start consumers
         def containerBeans = applicationContext.getBeansOfType(RabbitHAConsumer)
         containerBeans.each { beanName, bean ->
-            bean.start()
-        }
 
+            // If beanName is not disabled by config or bean has no property disabled or disabled is false ==> start the consumer
+            if(!rabbitmq[beanName]?.disabled || !bean.hasProperty('disabled') || bean.disabled == false) {
+                bean.start()
+            } else {
+                log.info "Consumer $beanName is disabled..."
+            }
+        }
     }
 
     def onChange = { event ->
