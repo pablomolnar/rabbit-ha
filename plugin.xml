@@ -1,8 +1,10 @@
 <plugin name='rabbit-ha' version='0.1' grailsVersion='1.3.7 &gt; *'>
   <author>Pablo Molnar</author>
   <authorEmail>pablomolnar@gmail.com</authorEmail>
-  <title>RabbitMQ-HA Plugin</title>
+  <title>RabbitMQ-HA Grails Plugin</title>
   <description>Alternative RabbitMQ plugin for Grails.
+
+Full documentation can be found here: http://grails.org/plugin/rabbit-ha
 </description>
   <documentation>http://grails.org/plugin/rabbit-ha</documentation>
   <type>RabbitHaGrailsPlugin</type>
