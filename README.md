@@ -7,6 +7,8 @@ This is an alternative to grails-rabbitmq official plugin. The main difference i
 + Consumer concurrency and prefetch count are configurable
 + Create with ease new consumers using grails create-consumer
 
+### Installation
+To confirm until is integrated with Grails Central Plugin repository
 
 ### Usage
 You should add the connection settings in Config.groovy
