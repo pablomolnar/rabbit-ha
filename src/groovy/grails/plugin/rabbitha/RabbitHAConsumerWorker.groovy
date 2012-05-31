@@ -61,7 +61,7 @@ class RabbitHAConsumerWorker implements Runnable {
                 log.info "delivery on:" + queueName
 
                 try {
-                    rabbitHAConsumer.handleMessage(delivery)
+                    rabbitHAConsumer.onDelivery(delivery)
                 } catch (e) {
                     channel.basicNack(delivery.envelope.deliveryTag, false, true)
                     log.error "Error processing message ${new String(delivery.body)}", e
