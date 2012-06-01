@@ -69,8 +69,6 @@ rabbitmq {
 RabbitMQ consumers configuration will be ignored...
 If you want to disable the plugin and remove this warning set rabbitmq.disabled = true
 """
-    )
-
 
     def watchedResources = [
             "file:./grails-app/consumers/**/*Consumer.groovy",
