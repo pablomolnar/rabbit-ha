@@ -9,7 +9,7 @@ Full documentation can be found here: http://grails.org/plugin/rabbit-ha
   <documentation>http://grails.org/plugin/rabbit-ha</documentation>
   <type>RabbitHaGrailsPlugin</type>
   <resources>
-    <resource>rabbit.ha.PabloConsumer</resource>
+    <resource>rabbit.ha.DisabledConsumer</resource>
   </resources>
   <repositories>
     <repository name='grailsCentral' url='http://plugins.grails.org' />

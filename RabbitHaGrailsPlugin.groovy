@@ -110,9 +110,8 @@ If you want to disable the plugin and remove this warning set rabbitmq.disabled 
         // Start consumers
         def containerBeans = applicationContext.getBeansOfType(RabbitHAConsumer)
         containerBeans.each { beanName, bean ->
-
             // If beanName is not disabled by config or bean has no property disabled or disabled is false ==> start the consumer
-            if(!rabbitmq[beanName]?.disabled || !bean.hasProperty('disabled') || bean.disabled == false) {
+            if(rabbitmq[beanName].disabled == false|| !bean.hasProperty('disabled') || bean.disabled == false) {
                 bean.start()
             } else {
                 log.info "Consumer $beanName is disabled..."

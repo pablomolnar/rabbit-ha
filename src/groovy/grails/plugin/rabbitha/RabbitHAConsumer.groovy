@@ -17,7 +17,8 @@ abstract class RabbitHAConsumer {
     static final Logger log = Logger.getLogger(this)
 
     ExecutorService service
-    List<RabbitHAConsumerWorker> consumers = []
+    List<RabbitHAConsumerWorker> workers = []
+    boolean started
 
     int getConcurrency() { 1 }
     int getPrefetchCount() { 100 }
@@ -26,24 +27,28 @@ abstract class RabbitHAConsumer {
     abstract String getQueueName()
 
     def start() {
-        log.info "Starting $concurrency consumers for $queueName"
+        log.info "Starting $concurrency consumer workers for $queueName"
         service = Executors.newFixedThreadPool(concurrency)
         concurrency.times {
-            def consumer = new RabbitHAConsumerWorker(this, prefetchCount)
-            consumers << consumer
-            service.execute(consumer)
+            def worker = new RabbitHAConsumerWorker(this, prefetchCount)
+            workers << worker
+            service.execute(worker)
         }
+
+        started = true
     }
 
     @PreDestroy
     def destroy() {
+        if(!started) return
+
         log.info "Shutdown consumer of $queueName"
         // TODO: Refactor close & release resources...
-        consumers.each {
+        workers.each {
             it.running = false
         }
 
-        consumers.each {
+        workers.each {
             it.close()
         }
 
