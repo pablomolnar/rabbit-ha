@@ -6,3 +6,4 @@
 target
 deploy.sh
 *.zip
+*.log
