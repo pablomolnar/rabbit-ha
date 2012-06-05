@@ -7,6 +7,7 @@ import org.apache.log4j.Logger
 import java.util.concurrent.Callable
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
+import org.codehaus.groovy.grails.commons.ApplicationHolder
 
 /**
  * @author: Pablo Molnar
@@ -48,6 +49,12 @@ class RabbitHAConsumerWorker implements Runnable {
     }
 
     void run() {
+        def startDelay = ApplicationHolder.application.config.rabbitmq.startDelay
+        if(startDelay) {
+            log.info "Delay startup to $startDelay seconds"
+            sleep(startDelay * 1000)
+        }
+
         log.info "Worker started"
 
         while (running) {
