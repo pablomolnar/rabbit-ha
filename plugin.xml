@@ -1,4 +1,4 @@
-<plugin name='rabbit-ha' version='0.1' grailsVersion='1.3.7 &gt; *'>
+<plugin name='rabbit-ha' version='0.4' grailsVersion='1.3.7 &gt; *'>
   <author>Pablo Molnar</author>
   <authorEmail>pablomolnar@gmail.com</authorEmail>
   <title>RabbitMQ-HA Grails Plugin</title>
