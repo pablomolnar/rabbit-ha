@@ -82,17 +82,6 @@ If you want to disable the plugin and remove this warning set rabbitmq.disabled 
     }
 
     def doWithSpring = {
-        def rabbitmq = application.config.rabbitmq
-        if(rabbitmq && rabbitmq.disabled) {
-            log.info "Plugin rabbit-ha is disabled"
-            return
-        }
-
-        if(!rabbitmq || !rabbitmq.connectionfactory || !rabbitmq.connectionfactory.username || !rabbitmq.connectionfactory.password || !rabbitmq.connectionfactory.virtualHost || !rabbitmq.connectionfactory.addresses) {
-            log.error(missingConfigurationError)
-            return
-        }
-
         application.consumerClasses.each {GrailsConsumerClass consumerClass ->
             def beanName = WordUtils.uncapitalize(consumerClass.getShortName())
 
@@ -106,6 +95,15 @@ If you want to disable the plugin and remove this warning set rabbitmq.disabled 
 
     def doWithApplicationContext = { applicationContext ->
         def rabbitmq = application.config.rabbitmq
+        if(rabbitmq && rabbitmq.disabled) {
+            log.info "Plugin rabbit-ha is disabled"
+            return
+        }
+
+        if(!rabbitmq || !rabbitmq.connectionfactory || !rabbitmq.connectionfactory.username || !rabbitmq.connectionfactory.password || !rabbitmq.connectionfactory.virtualHost || !rabbitmq.connectionfactory.addresses) {
+            log.error(missingConfigurationError)
+            return
+        }
 
         // Start consumers
         def containerBeans = applicationContext.getBeansOfType(RabbitHAConsumer)
