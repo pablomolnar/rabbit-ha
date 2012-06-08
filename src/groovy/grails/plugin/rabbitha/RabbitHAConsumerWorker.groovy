@@ -49,11 +49,10 @@ class RabbitHAConsumerWorker implements Runnable {
     }
 
     void run() {
-        def startDelay = ApplicationHolder.application.config.rabbitmq.startDelay
-        if(startDelay) {
-            log.info "Delay startup to $startDelay seconds"
-            sleep(startDelay * 1000)
-        }
+        def startDelay = ApplicationHolder.application.config.rabbitmq.startDelay ?: 5 // 5 Seconds default delay
+
+        log.info "Delay startup to $startDelay seconds"
+        sleep(startDelay * 1000)
 
         log.info "Worker started"
 
