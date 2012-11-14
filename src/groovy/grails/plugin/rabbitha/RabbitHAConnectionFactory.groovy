@@ -17,7 +17,7 @@ class RabbitHAConnectionFactory {
     static final $LOCK = new Object[0]
     static final ConcurrentHashMap map = new ConcurrentHashMap()
 
-    static Connection getConnection(String queueName) {
+    static Connection getConnection(String queueName, def addresses) {
         Connection connection
 
         synchronized ($LOCK) {
@@ -28,11 +28,13 @@ class RabbitHAConnectionFactory {
 
                 log.info "No connection established for queue $queueName. Create a new connection with $config"
 
-                Collections.shuffle(config.addresses)
+				Collections.shuffle(config.addresses)
                 def connectionFactory = new ConnectionFactory(username: config.username, password: config.password, virtualHost: config.virtualHost)
-                def addresses = Address.parseAddresses(config.addresses.join(','))
-                connection = connectionFactory.newConnection(addresses)
-                log.info "Succesfully connected to $connection.address for queue $queueName"
+				
+				def address = Address.parseAddresses(config.addresses.join(','))
+				
+				connection = connectionFactory.newConnection(addresses)
+				log.info "Succesfully connected to $addresses for queue $queueName"
 
                 map[queueName] = connection
             }

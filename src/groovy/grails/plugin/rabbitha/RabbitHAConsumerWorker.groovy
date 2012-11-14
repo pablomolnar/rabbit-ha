@@ -25,20 +25,22 @@ class RabbitHAConsumerWorker implements Runnable {
     int i = 0
 
     RabbitHAConsumer rabbitHAConsumer
+	def address
     def queueName
 
     Connection connection
     Channel channel
     def consumer
 
-    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, int prefetchCount = 100) {
+    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, def address, int prefetchCount = 100) {
         this.rabbitHAConsumer = rabbitHAConsumer
         this.queueName = rabbitHAConsumer.queueName
+		this.address = address;
     }
 
     void connect() {
-        connection = RabbitHAConnectionFactory.getConnection(queueName)
-        log.info("Connection to $connection.address")
+        connection = RabbitHAConnectionFactory.getConnection(queueName, address)
+        log.info("Connection to $address")
 
         channel = connection.createChannel()
         log.info("Channel $channel")
