@@ -25,14 +25,24 @@ abstract class RabbitHAConsumer {
 
     abstract void onDelivery(QueueingConsumer.Delivery delivery)
     abstract String getQueueName()
+	
+	def lauchWorker(def workers, def address) {
+		def worker = new RabbitHAConsumerWorker(this, address, prefetchCount)
+		workers << worker
+		service.execute(worker)
+	}
 
     def start() {
         log.info "Starting $concurrency consumer workers for $queueName"
         service = Executors.newFixedThreadPool(concurrency)
         concurrency.times {
-            def worker = new RabbitHAConsumerWorker(this, prefetchCount)
-            workers << worker
-            service.execute(worker)
+			if(config.addresses instanceof List) {
+				config.addresses.each{
+					lauchWorker(workers, it)
+				}
+			} else if(config.addresses instanceof String) {
+				lauchWorker(workers, config.addresses)
+			}
         }
 
         started = true
