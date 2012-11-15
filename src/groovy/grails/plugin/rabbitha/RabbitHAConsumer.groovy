@@ -2,6 +2,7 @@ package grails.plugin.rabbitha
 
 import com.rabbitmq.client.QueueingConsumer
 import org.apache.log4j.Logger
+import org.codehaus.groovy.grails.commons.ApplicationHolder;
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -34,6 +35,10 @@ abstract class RabbitHAConsumer {
 
     def start() {
         log.info "Starting $concurrency consumer workers for $queueName"
+		
+		def config = ApplicationHolder.application.config.rabbitmq.connectionfactory
+		if(!config) throw new IllegalArgumentException("Is supposed that connection factory settings were already validated...")
+		
         service = Executors.newFixedThreadPool(concurrency)
         concurrency.times {
 			if(config.addresses instanceof List) {
