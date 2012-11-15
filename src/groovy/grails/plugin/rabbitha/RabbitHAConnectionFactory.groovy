@@ -31,10 +31,10 @@ class RabbitHAConnectionFactory {
 				Collections.shuffle(config.addresses)
                 def connectionFactory = new ConnectionFactory(username: config.username, password: config.password, virtualHost: config.virtualHost)
 				
-				def address = Address.parseAddresses(config.addresses.join(','))
+				def address = Address.parseAddresses(addresses.join(','))
 				
-				connection = connectionFactory.newConnection(addresses)
-				log.info "Succesfully connected to $addresses for queue $queueName"
+				connection = connectionFactory.newConnection(address)
+				log.info "Succesfully connected to $address for queue $queueName"
 
                 map[queueName] = connection
             }
