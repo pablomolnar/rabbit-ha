@@ -33,3 +33,5 @@ log4j = {
     info 'grails.spring.BeanBuilder',
          'grails.plugin.rabbitha'
 }
+grails.views.default.codec="none" // none, html, base64
+grails.views.gsp.encoding="UTF-8"
