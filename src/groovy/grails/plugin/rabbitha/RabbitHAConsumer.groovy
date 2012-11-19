@@ -1,13 +1,15 @@
 package grails.plugin.rabbitha
 
-import com.rabbitmq.client.QueueingConsumer
-import org.apache.log4j.Logger
-
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
 import java.util.concurrent.TimeUnit
+
+import javax.annotation.PreDestroy
+
+import org.apache.log4j.Logger
+import org.codehaus.groovy.grails.commons.ApplicationHolder
+
+import com.rabbitmq.client.QueueingConsumer
 
 /**
  * @author: Pablo Molnar
@@ -25,14 +27,35 @@ abstract class RabbitHAConsumer {
 
     abstract void onDelivery(QueueingConsumer.Delivery delivery)
     abstract String getQueueName()
+	
+	def launchWorker(def address, int n) {
+		def worker = new RabbitHAConsumerWorker(this, address, n, prefetchCount)
+		workers << worker
+		service.execute(worker)
+	}
 
     def start() {
         log.info "Starting $concurrency consumer workers for $queueName"
-        service = Executors.newFixedThreadPool(concurrency)
+		
+		def config = ApplicationHolder.application.config.rabbitmq.connectionfactory
+		if(!config) throw new IllegalArgumentException("Is supposed that connection factory settings were already validated...")
+
+        def manyWorkers = config.addresses.any { it instanceof List }
+        def workersNumber = concurrency
+        if(manyWorkers)
+            workersNumber *= config.addresses.size()
+
+        service = Executors.newFixedThreadPool(workersNumber)
         concurrency.times {
-            def worker = new RabbitHAConsumerWorker(this, prefetchCount)
-            workers << worker
-            service.execute(worker)
+			if(manyWorkers) {
+                int n = 0;
+				config.addresses.each{
+					launchWorker(it, n)
+                    n++
+				}
+			} else {
+				launchWorker(config.addresses, 0)
+			}
         }
 
         started = true

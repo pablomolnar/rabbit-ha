@@ -1,13 +1,13 @@
 package grails.plugin.rabbitha
 
-import com.rabbitmq.client.AlreadyClosedException
-import com.rabbitmq.client.QueueingConsumer
-import com.rabbitmq.client.ShutdownSignalException
 import org.apache.log4j.Logger
-import java.util.concurrent.Callable
+import org.codehaus.groovy.grails.commons.ApplicationHolder
+
+import com.rabbitmq.client.AlreadyClosedException
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
-import org.codehaus.groovy.grails.commons.ApplicationHolder
+import com.rabbitmq.client.QueueingConsumer
+import com.rabbitmq.client.ShutdownSignalException
 
 /**
  * @author: Pablo Molnar
@@ -23,22 +23,26 @@ class RabbitHAConsumerWorker implements Runnable {
     volatile boolean running = true
     volatile boolean reconnect = true
     int i = 0
+    int nQueue = 0;
 
     RabbitHAConsumer rabbitHAConsumer
+	def address
     def queueName
 
     Connection connection
     Channel channel
     def consumer
 
-    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, int prefetchCount = 100) {
+    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, def address, int nQueue, int prefetchCount = 100) {
         this.rabbitHAConsumer = rabbitHAConsumer
         this.queueName = rabbitHAConsumer.queueName
+		this.address = address
+        this.nQueue = nQueue
     }
 
     void connect() {
-        connection = RabbitHAConnectionFactory.getConnection(queueName)
-        log.info("Connection to $connection.address")
+        connection = RabbitHAConnectionFactory.getConnection(queueName, address, nQueue)
+        log.info("Connection to $address")
 
         channel = connection.createChannel()
         log.info("Channel $channel")
