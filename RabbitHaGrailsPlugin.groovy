@@ -5,7 +5,7 @@ import org.apache.commons.lang.WordUtils
 
 class RabbitHaGrailsPlugin {
     // the plugin version
-    def version = "0.5"
+    def version = "0.6"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.3.7 > *"
     // the other plugins this plugin depends on
@@ -62,7 +62,7 @@ rabbitmq {
         username = "guest"
         password = "guest"
         virtualHost = "/"
-        addresses = ['hostname_1','hostname_2', ...]
+        addresses = [['hostname_01','hostname_02', ...],['hostname_11','hostname_12', ...],...]
     }
 }
 
