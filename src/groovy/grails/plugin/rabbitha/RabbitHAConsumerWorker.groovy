@@ -22,38 +22,43 @@ class RabbitHAConsumerWorker implements Runnable {
 
     volatile boolean running = true
     volatile boolean reconnect = true
-    int i = 0
-    int nQueue = 0;
+    int retry = 0
 
     RabbitHAConsumer rabbitHAConsumer
-	def address
     def queueName
+    int clusterIdx
+    int prefetchCount
 
     Connection connection
     Channel channel
     def consumer
 
-    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, def address, int nQueue, int prefetchCount = 100) {
+    RabbitHAConsumerWorker(RabbitHAConsumer rabbitHAConsumer, int clusterIdx = 0) {
         this.rabbitHAConsumer = rabbitHAConsumer
+        this.clusterIdx = clusterIdx
         this.queueName = rabbitHAConsumer.queueName
-		this.address = address
-        this.nQueue = nQueue
+        this.prefetchCount = rabbitHAConsumer.prefetchCount
     }
 
     void connect() {
-        connection = RabbitHAConnectionFactory.getConnection(queueName, address, nQueue)
-        log.info("Connection to $address")
+        connection = RabbitHAConnectionFactory.getConnection(queueName, clusterIdx)
+        log.info("Connection to $connection")
 
         channel = connection.createChannel()
         log.info("Channel $channel")
 
+        if(rabbitHAConsumer.declareQueue) {
+            channel.queueDeclare(queueName, true, false, false, null)
+        }
+
         consumer = new QueueingConsumer(channel)
         channel.basicConsume(queueName, false, consumer)
-        channel.basicQos(10)
+        channel.basicQos(prefetchCount)
     }
 
     void run() {
-        def startDelay = ApplicationHolder.application.config.rabbitmq.startDelay ?: 5 // 5 Seconds default delay
+        def config = ApplicationHolder.application.config.rabbitmq
+        def startDelay = config.startDelay ?: 5 // 5 Seconds default delay
 
         log.info "Delay startup to $startDelay seconds"
         sleep(startDelay * 1000)
@@ -64,7 +69,9 @@ class RabbitHAConsumerWorker implements Runnable {
             try {
                 if (reconnect) {
                     connect()
+
                     reconnect = false
+                    retry = 0
                 }
 
                 QueueingConsumer.Delivery delivery = consumer.nextDelivery()
@@ -79,7 +86,7 @@ class RabbitHAConsumerWorker implements Runnable {
                 }
 
                 channel.basicAck(delivery.envelope.deliveryTag, false)
-                i = 0
+                retry = 0
 
             } catch (e) {
                 if (running == false) {
@@ -93,14 +100,18 @@ class RabbitHAConsumerWorker implements Runnable {
                     throw new RuntimeException("Don't reconnect with this exception....", e)
                 }
 
-                if (i > 10) throw new RuntimeException("Reconnection failed $i times. Abort mission", e)
+                int maxRetries = config.reconnection?.maxRetries
+                int maxWaitTime = config.reconnection?.maxWaitTime ?: 60
 
-                i++
+                if (maxRetries && retry > maxRetries) throw new RuntimeException("Reconnection failed $retry times. Abort mission", e)
+
                 reconnect = true
-                def delay = i * 1000
 
-                log.error("Exception catched! Reconnection attempt #$i in $i seconds...", e)
-                sleep(delay)
+                int waitTime = retry++
+                if(waitTime > maxWaitTime) waitTime = maxWaitTime
+
+                log.error("Exception catched! Reconnection attempt #$retry in $waitTime seconds...", e)
+                sleep(waitTime * 1000)
             }
         }
     }

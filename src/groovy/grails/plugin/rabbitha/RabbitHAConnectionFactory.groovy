@@ -18,18 +18,24 @@ class RabbitHAConnectionFactory {
 	static final $LOCK = new Object[0]
 	static final ConcurrentHashMap map = new ConcurrentHashMap()
 
-	static Connection getConnection(String queueName, def addresses, int nQueue) {
+	static Connection getConnection(String queueName, int clusterIdx = 0) {
 		Connection connection
 
 		synchronized ($LOCK) {
-			connection = map.get(nQueue + "-" + queueName)
+			connection = map.get(clusterIdx + queueName)
 			if (connection == null || !connection.isOpen()) {
+
 				def config = ApplicationHolder.application.config.rabbitmq.connectionfactory
 				if(!config) throw new IllegalArgumentException("Is supposed that connection factory settings were already validated...")
 
 				log.info "No connection established for queue $queueName. Create a new connection with $config"
 
-				Collections.shuffle(config.addresses)
+                def addresses = config.addresses
+                if(config.mode == 'multiple') {
+                    addresses = config.addresses[clusterIdx]
+                }
+
+                Collections.shuffle(addresses)
 				def connectionFactory = new ConnectionFactory(username: config.username, password: config.password, virtualHost: config.virtualHost)
 				def address = Address.parseAddresses(addresses.join(','))
 

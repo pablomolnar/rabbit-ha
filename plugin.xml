@@ -13,6 +13,7 @@ Full documentation can be found here: http://grails.org/plugin/rabbit-ha
     <repository name='grailsCentral' url='http://grails.org/plugins' />
     <repository name='http://repo.grails.org/grails/core' url='http://repo.grails.org/grails/core/' />
     <repository name='mavenCentral' url='http://repo1.maven.org/maven2/' />
+    <repository name='http://snapshots.repository.codehaus.org' url='http://snapshots.repository.codehaus.org/' />
   </repositories>
   <dependencies>
     <runtime>

@@ -62,7 +62,7 @@ rabbitmq {
         username = "guest"
         password = "guest"
         virtualHost = "/"
-        addresses = [['hostname_01','hostname_02', ...],['hostname_11','hostname_12', ...],...]
+        addresses = ['hostname_01','hostname_02', ...] OR [['cluster_hostname_01','cluster_hostname_02', ...],['cluster_hostname_11','cluster_hostname_12', ...],...]
     }
 }
 
@@ -104,6 +104,23 @@ If you want to disable the plugin and remove this warning set rabbitmq.disabled 
             log.error(missingConfigurationError)
             return
         }
+
+        def addresses = rabbitmq.connectionfactory.addresses
+        if(!(addresses.every { it instanceof List } || addresses.every { it instanceof String })) {
+            log.error("The addresses format is not compatible.")
+            log.error(missingConfigurationError)
+            return
+        }
+
+        // Store nr of RabbitMQ clusters (single or multiple cluster)
+        if(addresses.any { it instanceof List }) {
+            rabbitmq.connectionfactory.mode = 'multiple'
+            rabbitmq.connectionfactory.clusters = addresses.size()
+        } else {
+            rabbitmq.connectionfactory.mode = 'single'
+            rabbitmq.connectionfactory.clusters = 1
+        }
+
 
         // Start consumers
         def containerBeans = applicationContext.getBeansOfType(RabbitHAConsumer)

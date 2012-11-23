@@ -22,17 +22,13 @@ abstract class RabbitHAConsumer {
     List<RabbitHAConsumerWorker> workers = []
     boolean started
 
-    int getConcurrency() { 1 }
-    int getPrefetchCount() { 100 }
-
     abstract void onDelivery(QueueingConsumer.Delivery delivery)
     abstract String getQueueName()
-	
-	def launchWorker(def address, int n) {
-		def worker = new RabbitHAConsumerWorker(this, address, n, prefetchCount)
-		workers << worker
-		service.execute(worker)
-	}
+
+    // Default settings
+    boolean getDeclareQueue() { false }
+    int getConcurrency() { 1 }
+    int getPrefetchCount() { 100 }
 
     def start() {
         log.info "Starting $concurrency consumer workers for $queueName"
@@ -40,22 +36,17 @@ abstract class RabbitHAConsumer {
 		def config = ApplicationHolder.application.config.rabbitmq.connectionfactory
 		if(!config) throw new IllegalArgumentException("Is supposed that connection factory settings were already validated...")
 
-        def manyWorkers = config.addresses.any { it instanceof List }
-        def workersNumber = concurrency
-        if(manyWorkers)
-            workersNumber *= config.addresses.size()
+        // Normal behaviour there is only one RabbitMQ cluster, but is allowed multiple RabbitMQ clusters per consumer.
+        int clusters = config.clusters
 
-        service = Executors.newFixedThreadPool(workersNumber)
+        service = Executors.newFixedThreadPool(concurrency * clusters)
+
         concurrency.times {
-			if(manyWorkers) {
-                int n = 0;
-				config.addresses.each{
-					launchWorker(it, n)
-                    n++
-				}
-			} else {
-				launchWorker(config.addresses, 0)
-			}
+            clusters.times { clusterIdx ->
+                def worker = new RabbitHAConsumerWorker(this, clusterIdx)
+                workers << worker
+                service.execute(worker)
+            }
         }
 
         started = true
